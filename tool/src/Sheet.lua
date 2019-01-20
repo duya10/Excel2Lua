@@ -53,7 +53,7 @@ local function orderByDesc(input)
 end
 
 function Sheet:getColumnString(num)
-    local number_tbl = dec2X(num - 1, 26)
+    local number_tbl = dec2X(num - 1, 26) -- 26进制，xlsx 的列号
     number_tbl[1] = number_tbl[1] + 1
 
     for i, v in ipairs(number_tbl) do

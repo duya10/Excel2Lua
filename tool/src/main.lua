@@ -31,8 +31,7 @@ end
 local NODE_ARRAY = 1
 local NODE_MAP   = 2
 local NODE_ROOT  = 3
-local function excel_to_lua(path, export_file_path, exclude_key)
-    exclude_key = exclude_key or ""
+local function excel_to_lua(path, export_file_path)
     local docObj = Excel.new()
     docObj:open(path)
 
@@ -66,18 +65,15 @@ local function excel_to_lua(path, export_file_path, exclude_key)
         end
         table_head[c] = { cn_name = cn_name, en_name = en_name, node_type = node_type }
     end
-    print(table_head)
     columns = #table_head
 
     local beg_column = sheetObj:getColumnString(1)
     local end_column = sheetObj:getColumnString(columns)
 
-    print("beg_column ",beg_column, ", end_column ", end_column)
-
     local all_range = {}
-    local MAX_READ_CELLS = 3000
-    local max_read_rows = math.floor(MAX_READ_CELLS / columns)
-    local read_range_times = math.ceil(rows / max_read_rows)
+    local MAX_READ_CELLS = 3000 -- 每次最多读取3000个单元格数据
+    local max_read_rows = math.floor(MAX_READ_CELLS / columns) -- 一次读取多少行
+    local read_range_times = math.ceil(rows / max_read_rows) -- 读取次数
     for index = 1, read_range_times do
         local begin_row = (index - 1) * max_read_rows + 1
         local end_row   = index * max_read_rows
@@ -86,12 +82,11 @@ local function excel_to_lua(path, export_file_path, exclude_key)
         end
         local range_str = string.format("%s%s:%s%s", beg_column, begin_row, end_column, end_row)
         local range_tbl = sheetObj:Range(range_str)
-        print(range_tbl)
         all_range[index] = range_tbl
     end
 
     -- 读取数据
-    local BEG_ROW = 4
+    local BEG_ROW = 4 -- 数据开始的行数
     local table_data = {}
     local all_rows = {}
     for r = BEG_ROW, rows do
@@ -125,7 +120,7 @@ local function excel_to_lua(path, export_file_path, exclude_key)
             elseif node_type == NODE_ARRAY then
                 key = #root_table + 1
             end
-            if string.find(en_name, exclude_key) == nil and val then
+            if val then
                 row_info[en_name] = val
             end
         end
