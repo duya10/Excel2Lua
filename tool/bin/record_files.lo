@@ -1,7 +1,0 @@
-{
-    ["E:\\git\\Excel2Lua\\xlsx\\test.xlsx"] = {
-        dir_path = "E:\\git\\Excel2Lua\\xlsx", 
-        entry = "test.xlsx", 
-        file_path = "E:\\git\\Excel2Lua\\xlsx\\test.xlsx", 
-        last_modification = 1547891625, 
-        last_size = 10013}}
