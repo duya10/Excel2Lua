@@ -25,6 +25,18 @@ local function trans_to_type(all_range, max_read_rows, row, col)
     end
     local val = cell_data
     val = tostring(val)
+    if (string.find(val, "^[[]") and string.find(val, "]$")) or
+        (string.find(val, "^{") and string.find(val, "}$")) then -- 规定被 [] 或者 {} 包围的转成 lua table
+        val = string.gsub(val, "[[]", "{") -- [ => {
+        val = string.gsub(val, "]", "}")   -- ] => }
+        val = string.gsub(val, "([{,])(%d+):", "%1[%2]=")  -- {1: => {[1]=
+        val = string.gsub(val, "([{,])([%w_]+):", "%1%2=") -- {str: => {str=
+        val = loadstring("return " .. val)
+        if not val then
+            error(string.format("tran to lua table error : row %d, col %d, val %s", row, col, cell_data))
+        end
+        val = val()
+    end
     return val, cell_data
 end
 
@@ -38,8 +50,7 @@ local function excel_to_lua(path, export_file_path)
     local sheetObj = docObj:selectSheet(1)
 
     local rows, columns = sheetObj:getUseRange()
-    print(U2G(string.format("行 %d，列 %d", rows, columns)))
-    print("export " .. path)
+    print(U2G(string.format("输出表格 %s , 共有 %d 行, %d 列", path, rows, columns)))
 
     -- 获取表头
     local table_head = {}
@@ -50,7 +61,7 @@ local function excel_to_lua(path, export_file_path)
         if en_name == nil then
             break
         end
-        assert(en_name:match("%s+") == nil, U2G(string.format("表[%s]的[%s]字段存在空白符号", path, en_name)))
+        assert(en_name:match("%s+") == nil, U2G(string.format("表 %s 的 %s 字段存在空白符号", path, en_name)))
 
         local node_type
         if node == "root" then
@@ -61,7 +72,7 @@ local function excel_to_lua(path, export_file_path)
             node_type = NODE_ARRAY
         end
         if c == 1 and node_type == nil then
-            node_type = NODE_ROOT
+            node_type = NODE_MAP
         end
         table_head[c] = { cn_name = cn_name, en_name = en_name, node_type = node_type }
     end
@@ -125,6 +136,7 @@ local function excel_to_lua(path, export_file_path)
             end
         end
         if is_empty_row then
+            print(U2G(string.format("表 %s 第 %s 行是空白行，空白行后的数据没有导到 .lua 文件", path, r)))
             break
         end
         if key then
@@ -163,7 +175,7 @@ function main()
         local is_export_file_exist = false
         local export_file = io.open(export_file_path, 'rb')
         if export_file then
-            -- is_export_file_exist = true
+            is_export_file_exist = true
             export_file:close()
         end
         if record_info == nil

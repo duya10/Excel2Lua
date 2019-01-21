@@ -25,7 +25,6 @@ function make_dir(directory)
             path = ""
         end
     end
-    print(directory)
     for d in directory:gmatch("([^" .. SEPARATOR .. "]+)" .. SEPARATOR .. "*") do
         path = path and path .. SEPARATOR .. d or d
         local mode = lfs.attributes(path, "mode")
